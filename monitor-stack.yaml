@@ -1,0 +1,149 @@
+version: "3"
+services:
+  nginxproxymanager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginxproxymanager
+    restart: unless-stopped
+    networks:
+      media-network:
+        ipv4_address: 172.26.0.80
+      iot-network:
+        ipv4_address: 172.42.0.80
+    ports:
+      - 180:80
+      - 1443:443
+      - 81:81
+    volumes:
+      - ${ROOT_DIR}/nginxproxymanager:/data
+      - ${ROOT_DIR}/nginxproxymanager/letsencrypt:/etc/letsencrypt
+      - ${ROOT_DIR}/nginxproxymanager:/config
+  netdata:
+    image: netdata/netdata
+    container_name: netdata
+    pid: host
+    hostname: black-fractal
+    networks:
+      - external-network
+    dns: 172.69.0.53
+    ports:
+      - 19999:19999
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - ${ROOT_DIR}/netdata/config:/etc/netdata
+      - ${ROOT_DIR}/netdata/lib:/var/lib/netdata
+      - ${ROOT_DIR}/netdata/cache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/hostname:/etc/hostname:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${ROOT_DIR}/pihole/setupVars.conf:/etc/pihole/setupVars.conf:ro #giving netdata assistance finding pihole
+      - /ssd:/local-ssd #used for monitoring disk space
+    environment:
+      - NETDATA_CLAIM_TOKEN=${NETDATA_CLAIM_TOKEN}
+      - NETDATA_CLAIM_URL=https://app.netdata.cloud
+      - NETDATA_CLAIM_ROOMS=${NETDATA_CLAIM_ROOMS}
+  watchtower:
+    image: containrrr/watchtower
+    networks: 
+      - external-network
+    dns: 172.69.0.53
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+  homeassistant:
+    container_name: homeassistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    volumes:
+      - ${ROOT_DIR}/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - mosquitto-network
+      - iot-network
+    dns: 172.42.0.53
+    ports:
+      - 8123:8123
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    networks:
+      - external-network
+    restart: always
+    user: "911"
+    ports:
+      - 3001:3000
+    dns: 172.69.0.53
+    volumes:
+      - ${ROOT_DIR}/grafana:/var/lib/grafana
+  pihole:
+    container_name: pihole
+    image: cbcrowe/pihole-unbound:latest
+    domainname: pihole.local
+    hostname: pihole.local
+    networks:
+      tesla-network:
+        ipv4_address: 172.20.0.53
+      media-network:
+        ipv4_address: 172.26.0.53
+      iot-network:
+        ipv4_address: 172.42.0.53
+      external-network:
+        ipv4_address: 172.69.0.53
+    ports:
+      - 443:443/tcp
+      - 53:53/tcp
+      - 53:53/udp
+      - 80:80/tcp
+    environment:
+      - FTLCONF_LOCAL_IPV4=0.0.0.0
+      - TZ=Etc/UTC
+      - WEBPASSWORD=${PIHOLE_WEB_PASSWORD}
+      - WEBTHEME=default-darker
+      - REV_SERVER=true
+      - REV_SERVER_TARGET=192.168.1.1
+      - REV_SERVER_DOMAIN=local
+      - REV_SERVER_CIDR=192.168.1.0/24
+      - PIHOLE_DNS_=127.0.0.1#5335
+      - DNSSEC="true"
+      - DNSMASQ_LISTENING=all
+      - WEBUIBOXEDLAYOUT=traditional
+    volumes:
+      - ${ROOT_DIR}/pihole:/etc/pihole:rw
+      - ${ROOT_DIR}/pihole-dnsmasq:/etc/dnsmasq.d:rw
+    restart: unless-stopped
+
+networks:
+  tesla-network:
+    external: true
+    name: tesla-network
+  media-network:
+    external: true
+    name: media-network
+  mosquitto-network:
+    external: true
+    name: mosquitto-network
+  iot-network:
+    name: iot-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.42.0.0/24
+  external-network:
+    name: external-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.69.0.0/24

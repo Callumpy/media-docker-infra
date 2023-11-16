@@ -1,0 +1,96 @@
+version: "3"
+services:
+  teslamate:
+    image: teslamate/teslamate:latest
+    container_name: teslamate
+    networks:
+      - tesla-network
+      - mosquitto-network
+      - external-network
+    dns: 172.20.0.53
+    restart: always
+    environment:
+      - ENCRYPTION_KEY=${TESLAMATE_ENCRYPTION_KEY}
+      - DATABASE_USER=${TESLAMATE_DB_USER}
+      - DATABASE_PASS=${TESLAMATE_DB_PASS}
+      - DATABASE_NAME=${TESLAMATE_DB_USER}
+      - DATABASE_HOST=postgres14
+      - MQTT_HOST=mosquitto
+      - VIRTUAL_HOST=192.168.1.50
+    ports:
+      - 4000:4000
+    cap_drop:
+      - all
+  postgres:
+    image: postgres:14
+    container_name: postgres14
+    restart: always
+    networks:
+      - tesla-network
+      - external-network
+    environment:
+      - POSTGRES_USER=${TESLAMATE_DB_USER}
+      - POSTGRES_PASSWORD=${TESLAMATE_DB_PASS}
+      - POSTGRES_DB=${TESLAMATE_DB_USER}
+    ports:
+      - 5432:5432
+    volumes:
+      - ${ROOT_DIR}/postgresql14:/var/lib/postgresql/data
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    networks:
+      - mosquitto-network
+    restart: always
+    command: mosquitto -c /mosquitto-no-auth.conf
+    ports:
+      - 1883:1883
+    volumes:
+      - ${ROOT_DIR}/mosquitto/config:/mosquitto/config
+      - ${ROOT_DIR}/mosquitto/data:/mosquitto/data
+  teslamateagile:
+    image: mattjeanes/teslamateagile:latest
+    container_name: teslamate-agile
+    networks:
+      - tesla-network
+    dns: 172.20.0.53
+    restart: always
+    environment:
+      - DATABASE_USER=${TESLAMATE_DB_USER}
+      - DATABASE_PASS=${TESLAMATE_DB_PASS}
+      - DATABASE_NAME=${TESLAMATE_DB_USER}
+      - DATABASE_HOST=postgres14
+      - TeslaMate__UpdateIntervalSeconds=300
+      - TeslaMate__GeofenceId=18 #the id of home location in teslamate
+      - TeslaMate__EnergyProvider=Octopus
+      - Octopus__RegionCode=B
+  abrp:
+    container_name: teslamate-abrp
+    image: fetzu/teslamate-abrp:latest
+    restart: always
+    networks:
+      - mosquitto-network
+      - tesla-network
+    dns: 172.20.0.53
+    environment:
+      - MQTT_SERVER=mosquitto
+      - USER_TOKEN=${ABRP_API_TOKEN}
+      - CAR_NUMBER=1
+      - CAR_MODEL=tesla:m3:20:bt36:heatpump
+
+networks:
+  tesla-network:
+    driver: bridge
+    name: tesla-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  mosquitto-network:
+    driver: bridge
+    name: mosquitto-network
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
+  external-network:
+    external: true
+    name: external-network

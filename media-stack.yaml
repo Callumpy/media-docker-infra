@@ -1,0 +1,180 @@
+version: "3"
+services:
+  rclone:
+    cap_add:
+      - SYS_ADMIN
+    container_name: rclone
+    restart: always
+    devices:
+      - /dev/fuse
+    environment:
+      - "PUID=911"
+      - "PGID=911"
+      - "TZ=Etc/UTC"
+      - "RCLONE_REMOTE_PATH=crypt:"
+      - "POOLING_FS=mergerfs"
+      - "RCLONE_MOUNT_USER_OPTS=--allow-non-empty"
+      - "MOVE_LOCAL_ALL=true"
+      - "MOVE_LOCAL_CRON=*/15 * * * *"
+    image: wiserain/rclone:latest
+    networks:
+      - media-network
+    dns: 172.26.0.53
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - ${ROOT_DIR}/rclone/cache:/cache
+      - ${ROOT_DIR}/rclone/config:/config
+      - ${ROOT_DIR}/rclone/log:/log
+      - ${MERGE_DATA_DIR}:/data:shared
+      - ${LOCAL_DATA_DIR}:/local
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false" #stops watchtower from restarting the container for updates
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    networks: 
+      - media-network
+    dns: 172.26.0.53
+    environment:
+      - PUID=911
+      - PGID=911
+      - TZ=Etc/UTC
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM}
+    volumes:
+      - ${ROOT_DIR}/plex/:/config
+      - ${MERGE_DATA_DIR}/backups/plex-database:/backup
+      - ${MERGE_DATA_DIR}/media/tv:/tv
+      - ${MERGE_DATA_DIR}/media/movies:/movies
+    ports:
+      - 32400:32400
+    restart: on-failure
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    networks: 
+      - media-network
+    dns: 172.26.0.53
+    environment:
+      - PUID=911
+      - PGID=911
+      - TZ=Etc/UTC
+    volumes:
+      - ${ROOT_DIR}/sonarr:/config
+      - ${MERGE_DATA_DIR}:/data
+    ports:
+      - 8989:8989
+    restart: on-failure
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    networks: 
+      - media-network
+    dns: 172.26.0.53
+    environment:
+      - PUID=911
+      - PGID=911
+      - TZ=Etc/UTC
+    volumes:
+      - ${ROOT_DIR}/radarr:/config
+      - ${MERGE_DATA_DIR}:/data
+    ports:
+      - 7878:7878
+    restart: on-failure
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    networks: 
+      - media-network
+    dns: 172.26.0.53
+    environment:
+      - PUID=911
+      - PGID=911
+      - TZ=Etc/UTC
+    volumes:
+      - ${ROOT_DIR}/sabnzbd:/config
+      - ${MERGE_DATA_DIR}:/data
+    ports:
+      - 8080:8080
+    restart: on-failure
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    networks: 
+      - media-network
+    dns: 172.26.0.53
+    environment:
+      - PUID=911
+      - PGID=911
+      - TZ=Etc/UTC
+    volumes:
+      - ${ROOT_DIR}/prowlarr:/config
+    ports:
+      - 9696:9696
+    restart: on-failure
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    networks: 
+      - media-network
+    dns: 172.26.0.53
+    environment:
+      - PUID=911
+      - PGID=911
+      - TZ=Etc/UTC
+    volumes:
+      - ${ROOT_DIR}/overseerr:/config
+    ports:
+      - 5055:5055
+    restart: on-failure
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    networks: 
+      - media-network
+    dns: 172.26.0.53
+    environment:
+      - PUID=911
+      - PGID=911
+      - TZ=Etc/UTC
+    volumes:
+      - ${ROOT_DIR}/tautulli:/config
+    ports:
+      - 8181:8181
+    restart: unless-stopped
+  musicbot:
+    image: callumpy/discord-musicbot
+    container_name: musicbot
+    networks:
+      - external-network
+    dns: 172.69.0.53
+    volumes:
+      - ${ROOT_DIR}/musicbot:/data
+    restart: always
+  notifiarr:
+    container_name: notifiarr
+    networks: 
+      - media-network
+    dns: 172.69.0.53
+    image: golift/notifiarr
+    restart: on-failure
+    ports:
+      - 5454:5454
+    volumes:
+      - ${ROOT_DIR}/notifiarr:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+    environment:
+      - DN_API_KEY=${NOTIFIARR_API_KEY}
+
+networks:
+  media-network:
+    driver: bridge
+    name: media-network
+    ipam:
+      config:
+        - subnet: 172.26.0.0/24
+  external-network:
+    external: true
+    name: external-network
