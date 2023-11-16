@@ -2,6 +2,8 @@
 
 This repo contains a backup of the Docker compose files that I use to spin up my homeserver so that others can make use of them or use them for inspiration.
 
+All of the containers are given specific static IPs and hostnames so that I can route them all through the PiHole on the same machine and use local DNS. Also allows the config of each application to use the container hostnames instead of messing around with IPs.
+
 ## Media
 - **Plex** (serves content)
 	- **Sonarr** (grabs TV)
