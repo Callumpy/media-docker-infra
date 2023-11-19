@@ -156,7 +156,7 @@ services:
     container_name: notifiarr
     networks: 
       - media-network
-    dns: 172.69.0.53
+    dns: 172.26.0.53
     image: golift/notifiarr
     restart: on-failure
     ports:
