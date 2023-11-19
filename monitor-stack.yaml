@@ -102,6 +102,8 @@ services:
         ipv4_address: 172.42.0.53
       external-network:
         ipv4_address: 172.69.0.53
+      wazuh-network:
+        ipv4_address: 172.23.0.53
     ports:
       - 443:443/tcp
       - 53:53/tcp
@@ -135,6 +137,9 @@ networks:
   mosquitto-network:
     external: true
     name: mosquitto-network
+  wazuh-network:
+    external: true
+    name: wazuh-network
   iot-network:
     name: iot-network
     driver: bridge
