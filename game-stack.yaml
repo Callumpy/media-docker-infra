@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  openttd:
+    image: n0thub/openttd:latest
+    container_name: openttd
+    ports:
+      - 3979:3979/tcp
+      - 3979:3979/udp
+    dns: 172.69.0.53
+    volumes:
+      - ${ROOT_DIR}/openttd:/data/
+      - ${ROOT_DIR}/openttd/save/template.sav:/data/save/template.sav
+    #environment:
+      #- LOAD_AUTOSAVE="true"
+      
+networks:
+  external-network:
+    external: true
+    name: external-network
