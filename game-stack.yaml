@@ -10,9 +10,9 @@ services:
     dns: 172.69.0.53
     volumes:
       - ${ROOT_DIR}/openttd:/data/
-      - ${ROOT_DIR}/openttd/save/template.sav:/data/save/template.sav
-    #environment:
-      #- LOAD_AUTOSAVE="true"
+      #- ${ROOT_DIR}/openttd/save/template.sav:/data/save/template.sav
+#    environment:
+#    - LOAD_AUTOSAVE="false"
       
 networks:
   external-network:

@@ -23,6 +23,7 @@ All of the containers are given specific static IPs and hostnames so that I can 
 
 ## Home
 - **HomeAssistant** (fully fledged home automation suite)
+- **Zigbee2MQTT** (syncs Zigbee network with MQTT to publish for HASS)
 - **PiHole** (internal DNS with unbound)
 - **Mosquitto** (used for some devices to send data to HASS + TeslaMate)
 

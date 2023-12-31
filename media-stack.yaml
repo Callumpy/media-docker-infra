@@ -13,7 +13,7 @@ services:
       - "TZ=Etc/UTC"
       - "RCLONE_REMOTE_PATH=crypt:"
       - "POOLING_FS=mergerfs"
-      - "RCLONE_MOUNT_USER_OPTS=--allow-non-empty"
+      - "RCLONE_MOUNT_USER_OPTS=--allow-non-empty --async-read=false"
       - "MOVE_LOCAL_ALL=true"
       - "MOVE_LOCAL_CRON=*/15 * * * *"
     image: wiserain/rclone:latest
@@ -140,6 +140,7 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ${ROOT_DIR}/tautulli:/config
+      - ${ROOT_DIR}/plex/Library/Application Support/Plex Media Server/Logs/:/plexlogs
     ports:
       - 8181:8181
     restart: unless-stopped

@@ -66,8 +66,6 @@ services:
       - ${ROOT_DIR}/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus
-    devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0
     restart: unless-stopped
     privileged: true
     networks:
@@ -76,6 +74,23 @@ services:
     dns: 172.42.0.53
     ports:
       - 8123:8123
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt
+    restart: unless-stopped
+    networks:
+      - mosquitto-network
+      - iot-network
+    volumes:
+      -  ${ROOT_DIR}/zigbee2mqtt:/app/data
+      - /run/udev:/run/udev:ro
+    ports:
+      - 8081:8081
+    environment:
+      - TZ=Europe/London
+    devices:
+      - /dev/serial/by-id/usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00-port0:/dev/ttyUSB0
+    dns: 172.42.0.53
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -91,8 +106,8 @@ services:
   pihole:
     container_name: pihole
     image: cbcrowe/pihole-unbound:latest
-    domainname: pihole.local
-    hostname: pihole.local
+    domainname: pihole.home
+    hostname: pihole.home
     networks:
       tesla-network:
         ipv4_address: 172.20.0.53
@@ -116,7 +131,7 @@ services:
       - WEBTHEME=default-darker
       - REV_SERVER=true
       - REV_SERVER_TARGET=192.168.1.1
-      - REV_SERVER_DOMAIN=local
+      - REV_SERVER_DOMAIN=home
       - REV_SERVER_CIDR=192.168.1.0/24
       - PIHOLE_DNS_=127.0.0.1#5335
       - DNSSEC="true"
@@ -125,6 +140,7 @@ services:
     volumes:
       - ${ROOT_DIR}/pihole:/etc/pihole:rw
       - ${ROOT_DIR}/pihole-dnsmasq:/etc/dnsmasq.d:rw
+      - ${ROOT_DIR}/pihole-unbound/custom.conf:/etc/unbound/unbound.conf.d/custom.conf
     restart: unless-stopped
 
 networks:
