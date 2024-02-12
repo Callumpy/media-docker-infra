@@ -32,8 +32,8 @@ services:
       - POSTGRES_USER=${TESLAMATE_DB_USER}
       - POSTGRES_PASSWORD=${TESLAMATE_DB_PASS}
       - POSTGRES_DB=${TESLAMATE_DB_USER}
-    ports:
-      - 5432:5432
+    expose:
+      - 5432
     volumes:
       - ${ROOT_DIR}/postgresql14:/var/lib/postgresql/data
   mosquitto:
@@ -61,7 +61,7 @@ services:
       - DATABASE_NAME=${TESLAMATE_DB_USER}
       - DATABASE_HOST=postgres14
       - TeslaMate__UpdateIntervalSeconds=300
-      - TeslaMate__GeofenceId=18 #the id of home location in teslamate
+      - TeslaMate__GeofenceId=18
       - TeslaMate__EnergyProvider=Octopus
       - Octopus__RegionCode=B
   abrp:

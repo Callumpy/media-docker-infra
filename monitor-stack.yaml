@@ -52,12 +52,16 @@ services:
       - NETDATA_CLAIM_ROOMS=${NETDATA_CLAIM_ROOMS}
   watchtower:
     image: containrrr/watchtower
-    networks: 
+    networks:
       - external-network
     dns: 172.69.0.53
     container_name: watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_NOTIFICATION_REPORT=true
+      - WATCHTOWER_NOTIFICATION_URL=${NOTIFIARR_URL}
+      - WATCHTOWER_CLEANUP=true
     restart: always
   homeassistant:
     container_name: homeassistant

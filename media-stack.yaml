@@ -33,7 +33,7 @@ services:
   plex:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
-    networks: 
+    networks:
       - media-network
     dns: 172.26.0.53
     environment:
@@ -44,6 +44,7 @@ services:
       - PLEX_CLAIM=${PLEX_CLAIM}
     volumes:
       - ${ROOT_DIR}/plex/:/config
+      - ${ROOT_DIR}/plex-transcode:/temp
       - ${MERGE_DATA_DIR}/backups/plex-database:/backup
       - ${MERGE_DATA_DIR}/media/tv:/tv
       - ${MERGE_DATA_DIR}/media/movies:/movies
@@ -53,7 +54,7 @@ services:
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
-    networks: 
+    networks:
       - media-network
     dns: 172.26.0.53
     environment:
@@ -69,7 +70,7 @@ services:
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
-    networks: 
+    networks:
       - media-network
     dns: 172.26.0.53
     environment:
@@ -85,7 +86,7 @@ services:
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
-    networks: 
+    networks:
       - media-network
     dns: 172.26.0.53
     environment:
@@ -101,7 +102,7 @@ services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
-    networks: 
+    networks:
       - media-network
     dns: 172.26.0.53
     environment:
@@ -116,7 +117,7 @@ services:
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
     container_name: overseerr
-    networks: 
+    networks:
       - media-network
     dns: 172.26.0.53
     environment:
@@ -131,7 +132,7 @@ services:
   tautulli:
     image: lscr.io/linuxserver/tautulli:latest
     container_name: tautulli
-    networks: 
+    networks:
       - media-network
     dns: 172.26.0.53
     environment:
@@ -141,8 +142,8 @@ services:
     volumes:
       - ${ROOT_DIR}/tautulli:/config
       - ${ROOT_DIR}/plex/Library/Application Support/Plex Media Server/Logs/:/plexlogs
-    ports:
-      - 8181:8181
+    expose:
+      - 8181
     restart: unless-stopped
   musicbot:
     image: callumpy/discord-musicbot
@@ -155,13 +156,13 @@ services:
     restart: always
   notifiarr:
     container_name: notifiarr
-    networks: 
+    networks:
       - media-network
     dns: 172.26.0.53
     image: golift/notifiarr
     restart: on-failure
-    ports:
-      - 5454:5454
+    expose:
+      - 5454
     volumes:
       - ${ROOT_DIR}/notifiarr:/config
       - /var/run/utmp:/var/run/utmp

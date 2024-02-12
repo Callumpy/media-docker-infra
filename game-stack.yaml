@@ -5,15 +5,35 @@ services:
     image: n0thub/openttd:latest
     container_name: openttd
     ports:
-      - 3979:3979/tcp
-      - 3979:3979/udp
+      - 3979:3979
     dns: 172.69.0.53
     volumes:
       - ${ROOT_DIR}/openttd:/data/
-      #- ${ROOT_DIR}/openttd/save/template.sav:/data/save/template.sav
-#    environment:
-#    - LOAD_AUTOSAVE="false"
-      
+      - ${ROOT_DIR}/openttd/save/template.sav:/data/save/template.sav
+  environment:
+      - LOAD_AUTOSAVE="false"
+
+  amp:
+    container_name: amp
+    image: mitchtalmadge/amp-dockerized:latest
+    mac_address: ${AMP_MAC}
+    networks:
+      - external-network
+    dns: 172.69.0.53
+    ports:
+      #- 25565:25565
+      - 19132:19132/udp
+      - 25570:8080
+    volumes:
+      - ${ROOT_DIR}/ampdata:/home/amp/.ampdata
+    environment:
+      - "UID=911"
+      - "GID=911"
+      - "TZ=Europe/London"
+      - "LICENCE=${CUBE_LICENSE}"
+      - "MODULE=Minecraft"
+    restart: unless-stopped
+
 networks:
   external-network:
     external: true
