@@ -1,2 +1,1 @@
 0 * * * * bash /appdata/ssh_rotate.sh
-* * * * * bash /appdata/container-watcher.sh

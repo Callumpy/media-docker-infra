@@ -1,0 +1,104 @@
+# Allow traffic via the NGINX proxy on server.
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.42.0.80
+
+# Enable communication with Google project for Home app and Google Assistant.
+google_assistant:
+  project_id: home-assistant-22107
+  service_account: !include SERVICE_ACCOUNT.json
+  report_state: true
+  exposed_domains:
+    - switch
+    - light
+    - scene
+    - vacuum
+  entity_config:
+    script.warm_the_tesla:
+      name: Warm the Tesla
+      expose: true
+    script.turn_off_climate_in_tesla:
+      name: Turn Tesla Off
+      expose: true
+    switch.white_buoy_charger:
+      expose: false
+    switch.white_buoy_polling:
+      expose: false
+    switch.white_buoy_valet_mode:
+      expose: false
+    switch.white_buoy_sentry_mode:
+      expose: false
+    light.living_room:
+      expose: false
+    light.all_bedroom_lights:
+      expose: false
+    light.all_hallway_lights:
+      expose: false
+    light.all_office_lights:
+      expose: false
+
+homekit:
+  - name: HASS Bridge
+    advertise_ip: '192.168.1.50'
+    port: 21064
+
+# Load config editor dashboard.
+config_editor:
+
+rest:
+  resource: "https://info.ambervalley.gov.uk/WebServices/AVBCFeeds/WasteCollectionJSON.asmx/GetCollectionDetailsByUPRN?uprn=FAKE"
+  scan_interval: 86400
+  sensor:
+    - name: "Refuse Bin: Next Date"
+      value_template: "{{ as_datetime(value_json.refuseNextDate) }}"
+      icon: "mdi:trash-can"
+    - name: "Recycling Bin: Next Date"
+      value_template: "{{ as_datetime(value_json.recyclingNextDate) }}"
+      icon: "mdi:recycle"
+
+sensor:
+  - platform: template
+    sensors:
+      office_vindriktning_bme280_temperature:
+        friendly_name: "Office Temperature (Corrected)"
+        unique_id: office_vindriktning_bme280_temperature_corrected
+        unit_of_measurement: "°C"
+        value_template: >-
+          {{ states.sensor.office_vindriktning_bme280_temperature.state | float - 2 }}
+      bedroom_vindriktning_bme280_temperature:
+        friendly_name: "Bedroom Temperature (Corrected)"
+        unique_id: bedroom_vindriktning_bme280_temperature_corrected
+        unit_of_measurement: "°C"
+        value_template: >-
+          {{ states.sensor.bedroom_vindriktning_bme280_temperature.state | float - 1.3 }}
+      living_room_motion_sensor_temperature:
+        friendly_name: "Living Room Temperature (Corrected)"
+        unique_id: living_room_motion_sensor_temperature_corrected
+        unit_of_measurement: "°C"
+        value_template: >-
+          {{ states.sensor.living_room_sensor_temperature.state | float - 0.5 }}
+      kitchen_sensor_temperature:
+        friendly_name: "Kitchen Temperature (Corrected)"
+        unique_id: kitchen_sensor_temperature_corrected
+        unit_of_measurement: "°C"
+        value_template: >-
+          {{ states.sensor.kitchen_sensor_temperature.state | float - 0.9 }}
+      dishwasher_target_start_time:
+        friendly_name: "Dishwasher Start Time"
+        value_template: "{{ state_attr('binary_sensor.octopus_energy_target_dishwasher', 'target_times')[0]['start'] }}"
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
