@@ -1,0 +1,39 @@
+version: "3.5"
+services:
+  nordvpn:
+    image: bubuntux/nordvpn:latest
+    container_name: nordvpn
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    networks: 
+      - media-network
+    dns: 172.26.0.53
+    environment:
+      - TOKEN=${NORDVPN_TOKEN}
+      - CONNECT=United_Kingdom
+      - TECHNOLOGY=NordLynx
+      - NETWORK=192.168.1.0/24
+    ports:
+      - 8088:8088
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: service:nordvpn
+    environment:
+      - WEBUI_PORT=8088
+      - PUID=911
+      - PGID=911
+    volumes:
+      - ${ROOT_DIR}/qbittorrent:/config
+      - ${MERGE_DATA_DIR}:/data
+    depends_on:
+      - nordvpn
+    restart: always
+    
+networks:
+  media-network:
+    external: true
+    name: media-network

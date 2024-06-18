@@ -16,6 +16,11 @@ All of the containers are given specific static IPs and hostnames so that I can 
 - **Rclone** (makes a copy of my files in GDrive and deletes local - also mounts GDrive for file streaming)
 - **Discord MusicBot**
 
+## Torrent
+Seperate stack as only used for backup
+- **qBittorrent**
+- **NordVPN**
+
 ## Server
 - **Netdata** (monitors the server)
 - **NGINX Proxy Manager** (proxies HTTPS traffic to local docker IPs)
@@ -33,3 +38,7 @@ All of the containers are given specific static IPs and hostnames so that I can 
 - **Grafana** (graph and display the TeslaMate data)
 - **TeslaMate ABRP** (sends live car data to A Better Route Planner)
 - **TeslaMate Agile** (updates TeslaMate charging data with Octopus Agile prices for realistic cost tracking)
+
+## Game
+- **OpenTTD**
+- **AMP** (paid interface for configuring Minecraft)
